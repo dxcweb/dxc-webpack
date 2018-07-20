@@ -2,17 +2,20 @@ import { existsSync, readFileSync } from 'fs';
 import { join, resolve } from 'path';
 import assert from 'assert';
 import stripJsonComments from 'strip-json-comments';
+import requireindex from 'requireindex';
 import didyoumean from 'didyoumean';
 import chalk from 'chalk';
 import isEqual from 'lodash.isequal';
 import isPlainObject from 'is-plain-object';
 import { clearConsole } from '../reactDevUtils';
 import { watch, unwatch } from './watch';
-import getPlugins from './getPlugins';
 
 const debug = require('debug')('af-webpack:getUserConfig');
 
-const plugins = getPlugins();
+const pluginsMap = requireindex(join(__dirname, './configs'));
+const plugins = Object.keys(pluginsMap).map(key => {
+  return pluginsMap[key].default();
+});
 const pluginNames = plugins.map(p => p.name);
 const pluginsMapByName = plugins.reduce((memo, p) => {
   memo[p.name] = p;
@@ -76,7 +79,6 @@ export default function getUserConfig(opts = {}) {
     cwd = process.cwd(),
     configFile = '.webpackrc',
     disabledConfigs = [],
-    preprocessor,
   } = opts;
 
   // TODO: 支持数组的形式？
@@ -97,13 +99,7 @@ export default function getUserConfig(opts = {}) {
   if (existsSync(jsRCFile)) {
     // no cache
     delete require.cache[jsRCFile];
-    config = require(jsRCFile); // eslint-disable-line
-    if (config.default) {
-      config = config.default;
-    }
-  }
-  if (typeof preprocessor === 'function') {
-    config = preprocessor(config);
+    config = require(jsRCFile);
   }
 
   // Context for validate function
@@ -146,9 +142,8 @@ export default function getUserConfig(opts = {}) {
 
   // Merge config with current env
   if (config.env) {
-    if (config.env[process.env.NODE_ENV]) {
+    if (config.env[process.env.NODE_ENV])
       merge(config, config.env[process.env.NODE_ENV]);
-    }
     delete config.env;
   }
 
@@ -163,56 +158,49 @@ export default function getUserConfig(opts = {}) {
   }
 
   let configFailed = false;
-  function watchConfigsAndRun(_devServer, watchOpts = {}) {
+  function watchConfigsAndRun(_devServer) {
     devServer = _devServer;
 
-    const watcher = watchConfigs(opts);
-    if (watcher) {
-      watcher.on('all', () => {
-        try {
-          if (watchOpts.beforeChange) {
-            watchOpts.beforeChange();
-          }
+    watchConfigs(opts).on('all', (event, path) => {
+      try {
+        const { config: newConfig } = getUserConfig({
+          ...opts,
+          setConfig(newConfig) {
+            config = newConfig;
+          },
+        });
 
-          const { config: newConfig } = getUserConfig({
-            ...opts,
-            setConfig(newConfig) {
-              config = newConfig;
-            },
-          });
-
-          // 从失败中恢复过来，需要 reload 一次
-          if (configFailed) {
-            configFailed = false;
-            reload();
-          }
-
-          // 比较，然后执行 onChange
-          for (const plugin of plugins) {
-            const { name, onChange } = plugin;
-
-            if (!isEqual(newConfig[name], config[name])) {
-              debug(
-                `Config ${name} changed, from ${JSON.stringify(
-                  config[name],
-                )} to ${JSON.stringify(newConfig[name])}`,
-              );
-              (onChange || restart.bind(null, `${name} changed`)).call(null, {
-                name,
-                val: config[name],
-                newVal: newConfig[name],
-                config,
-                newConfig,
-              });
-            }
-          }
-        } catch (e) {
-          configFailed = true;
-          console.error(chalk.red(`Watch handler failed, since ${e.message}`));
-          console.error(e);
+        // 从失败中恢复过来，需要 reload 一次
+        if (configFailed) {
+          configFailed = false;
+          reload();
         }
-      });
-    }
+
+        // 比较，然后执行 onChange
+        for (const plugin of plugins) {
+          const { name, onChange } = plugin;
+
+          if (!isEqual(newConfig[name], config[name])) {
+            debug(
+              `Config ${name} changed, from ${JSON.stringify(
+                config[name],
+              )} to ${JSON.stringify(newConfig[name])}`,
+            );
+            (onChange || restart.bind(null, `${name} changed`)).call(null, {
+              name,
+              val: config[name],
+              newVal: newConfig[name],
+              config,
+              newConfig,
+            });
+          }
+        }
+      } catch (e) {
+        configFailed = true;
+        console.error(chalk.red(`Watch handler failed, since ${e.message}`));
+        console.error(e);
+      }
+    });
   }
 
   debug(`UserConfig: ${JSON.stringify(config)}`);

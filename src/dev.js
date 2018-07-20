@@ -1,9 +1,9 @@
+import { createCompiler, prepareUrls } from './WebpackDevServerUtils';
+import clearConsole from './clearConsole';
 import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import chalk from 'chalk';
-import { createCompiler, prepareUrls } from './WebpackDevServerUtils';
-import clearConsole from './clearConsole';
 import errorOverlayMiddleware from './errorOverlayMiddleware';
 import send, { STARTING, COMPILING, DONE } from './send';
 import choosePort from './choosePort';
@@ -11,26 +11,20 @@ import choosePort from './choosePort';
 const isInteractive = process.stdout.isTTY;
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 8000;
 const HOST = process.env.HOST || '0.0.0.0';
-const PROTOCOL = process.env.HTTPS ? 'https' : 'http';
+const PROTOCOL = 'http';
 const noop = () => {};
 
 process.env.NODE_ENV = 'development';
 
 export default function dev({
-  cwd,
   webpackConfig,
   extraMiddlewares,
-  beforeServerWithApp,
   beforeServer,
   afterServer,
-  contentBase,
   onCompileDone = noop,
   onCompileInvalid = noop,
   proxy,
   openBrowser: openBrowserOpts,
-  historyApiFallback = {
-    disableDotRule: true,
-  },
 }) {
   if (!webpackConfig) {
     throw new Error('必须提供 webpackConfig 配置项');
@@ -74,24 +68,19 @@ export default function dev({
         watchOptions: {
           ignored: /node_modules/,
         },
-        historyApiFallback,
+        historyApiFallback: {
+          disableDotRule: true,
+        },
         overlay: false,
         host: HOST,
         proxy,
-        https: !!process.env.HTTPS,
-        contentBase: contentBase || process.env.CONTENT_BASE,
         before(app) {
-          if (beforeServerWithApp) {
-            beforeServerWithApp(app);
-          }
-          app.use(errorOverlayMiddleware());
-        },
-        after(app) {
           if (extraMiddlewares) {
             extraMiddlewares.forEach(middleware => {
               app.use(middleware);
             });
           }
+          app.use(errorOverlayMiddleware());
         },
       };
       const devServer = new WebpackDevServer(compiler, serverConfig);
@@ -108,7 +97,7 @@ export default function dev({
         if (isInteractive) {
           clearConsole();
         }
-        console.log(chalk.cyan('\nStarting the development server...\n'));
+        console.log(chalk.cyan('Starting the development server...\n'));
         if (openBrowserOpts) {
           openBrowser(urls.localUrlForBrowser);
         }

@@ -10,12 +10,16 @@ import { warnIfExists as warnIfWebpackConfigExists } from './applyWebpackConfig'
 
 const debug = require('debug')('af-webpack:build');
 
+if (!process.env.NO_COMPRESS) {
+  process.env.NODE_ENV = 'production';
+}
+
 // These sizes are pretty large. We'll warn for bundles exceeding them.
 const WARN_AFTER_BUNDLE_GZIP_SIZE = 512 * 1024;
 const WARN_AFTER_CHUNK_GZIP_SIZE = 1024 * 1024;
 
 function buildWebpack(opts = {}) {
-  const { webpackConfig, watch, success, fail } = opts;
+  const { webpackConfig, watch, success } = opts;
   debug(`webpack config: ${JSON.stringify(webpackConfig)}`);
   debug(
     `Clean output path ${webpackConfig.output.path.replace(
@@ -55,7 +59,6 @@ function buildWebpack(opts = {}) {
     console.log(chalk.red('Failed to compile.\n'));
     printBuildError(err);
     debug(err);
-    if (fail) fail(err);
     if (!watch) process.exit(1);
   }
 
@@ -87,12 +90,12 @@ function buildWebpack(opts = {}) {
 }
 
 export default function build(opts = {}) {
-  const { webpackConfig, cwd = process.cwd() } = opts;
+  const { webpackConfig } = opts;
   assert(webpackConfig, 'webpackConfig should be supplied.');
   assert(isPlainObject(webpackConfig), 'webpackConfig should be plain object.');
 
   // 存在 webpack.config.js 时提醒用户
-  warnIfWebpackConfigExists(opts.cwd || cwd);
+  warnIfWebpackConfigExists();
 
   buildWebpack(opts);
 }

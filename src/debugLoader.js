@@ -1,4 +1,5 @@
-export default function(source, map) {
+
+export default function (source) {
   const { resourcePath } = this;
   const debugLoader = process.env.DEBUG_LOADER;
   if (debugLoader && resourcePath.indexOf(debugLoader) > -1) {
@@ -12,5 +13,5 @@ export default function(source, map) {
     console.log('');
     console.log('');
   }
-  this.callback(null, source, map);
+  this.callback(null, source);
 }

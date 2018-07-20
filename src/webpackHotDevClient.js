@@ -57,55 +57,53 @@ if (module.hot && typeof module.hot.dispose === 'function') {
 }
 
 // Connect to WebpackDevServer via a socket.
-if (process.env.SOCKET_SERVER !== 'none') {
-  socket(
-    process.env.SOCKET_SERVER
-      ? `${stripLastSlash(process.env.SOCKET_SERVER)}/sockjs-node`
-      : url.format({
-          protocol: window.location.protocol,
-          hostname: window.location.hostname,
-          port: window.location.port,
-          // Hardcoded in WebpackDevServer
-          pathname: '/sockjs-node',
-        }),
-    {
-      onclose() {
-        if (
-          typeof console !== 'undefined' &&
-          typeof console.info === 'function'
-        ) {
-          console.info(
-            'The development server has disconnected.\nRefresh the page if necessary.',
-          );
-        }
-      },
-      onmessage(e) {
-        var message = JSON.parse(e.data);
-        switch (message.type) {
-          case 'hash':
-            handleAvailableHash(message.data);
-            break;
-          case 'still-ok':
-          case 'ok':
-            handleSuccess();
-            break;
-          case 'content-changed':
-            // Triggered when a file from `contentBase` changed.
-            window.location.reload();
-            break;
-          case 'warnings':
-            handleWarnings(message.data);
-            break;
-          case 'errors':
-            handleErrors(message.data);
-            break;
-          default:
-          // Do nothing.
-        }
-      },
+var connection = socket(
+  process.env.SOCKET_SERVER
+    ? `${stripLastSlash(process.env.SOCKET_SERVER)}/sockjs-node`
+    : url.format({
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
+        port: window.location.port,
+        // Hardcoded in WebpackDevServer
+        pathname: '/sockjs-node',
+      }),
+  {
+    onclose() {
+      if (
+        typeof console !== 'undefined' &&
+        typeof console.info === 'function'
+      ) {
+        console.info(
+          'The development server has disconnected.\nRefresh the page if necessary.',
+        );
+      }
     },
-  );
-}
+    onmessage(e) {
+      var message = JSON.parse(e.data);
+      switch (message.type) {
+        case 'hash':
+          handleAvailableHash(message.data);
+          break;
+        case 'still-ok':
+        case 'ok':
+          handleSuccess();
+          break;
+        case 'content-changed':
+          // Triggered when a file from `contentBase` changed.
+          window.location.reload();
+          break;
+        case 'warnings':
+          handleWarnings(message.data);
+          break;
+        case 'errors':
+          handleErrors(message.data);
+          break;
+        default:
+        // Do nothing.
+      }
+    },
+  },
+);
 
 // Remember some state related to hot module replacement.
 var isFirstCompilation = true;
@@ -232,7 +230,7 @@ function canApplyUpdates() {
 
 // Attempt to update code on the fly, fall back to a hard reload.
 function tryApplyUpdates(onHotUpdateSuccess) {
-  if (process.env.HMR === 'reload' || !module.hot) {
+  if (!module.hot) {
     // HotModuleReplacementPlugin is not in Webpack configuration.
     window.location.reload();
     return;

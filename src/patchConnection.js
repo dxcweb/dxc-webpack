@@ -9,14 +9,13 @@ export function showLoading() {
   el.style.top = '50%';
   el.style.marginTop = '-10px';
   el.style.width = '100%';
-  el.style.background = '#fff1b8';
+  el.style.background = 'yellow';
   el.style.zIndex = 2147483647000000;
-  el.style.color = '#613400';
+  el.style.color = '#8b0000';
   el.style.textAlign = 'center';
   el.style.fontSize = '18px';
-  el.style.fontFamily = 'Consolas, Menlo, Courier, monospace';
-  el.style.padding = '8px 0';
-  el.style.boxShadow = '0px 4px 8px rgba(254, 241, 184, 0.3)';
+  el.style.padding = '4px 0';
+  el.style.boxShadow = '0px 0px 20px #00000054';
   el.innerHTML = 'Disconnected from the devServer, trying to reconnect...';
   document.body.appendChild(el);
 }
@@ -26,20 +25,11 @@ export function hideLoading() {
 }
 
 export function connectServer(onSuccess) {
-  let count = 0;
-
-  function retry() {
-    if (++count > 20) {
-      el.innerHTML = 'Disconnected from the devServer.';
-      return;
-    }
-
-    fetch(window.location.href)
-      .then(onSuccess)
-      .catch(() => {
-        setTimeout(retry, 1000);
-      });
-  }
-
-  retry();
+  fetch(window.location.href)
+    .then(onSuccess)
+    .catch(() => {
+      setTimeout(() => {
+        connectServer(onSuccess);
+      }, 1000);
+    });
 }

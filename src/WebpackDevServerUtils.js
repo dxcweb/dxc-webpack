@@ -1,9 +1,8 @@
-/* eslint-disable */
 import address from 'address';
 import url from 'url';
 import chalk from 'chalk';
-import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import clearConsole from './clearConsole';
+import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 
 const isInteractive = process.stdout.isTTY;
 let handleCompile;
@@ -109,7 +108,7 @@ function createCompiler(webpack, config, appName, urls, useYarn) {
   } catch (err) {
     console.log(chalk.red('Failed to compile.'));
     console.log();
-    console.log(err.stack);
+    console.log(err.message || err);
     console.log();
     process.exit(1);
   }
