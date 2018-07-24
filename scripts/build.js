@@ -7,7 +7,13 @@ const { readFileSync, writeFileSync } = require("fs");
 const { join } = require("path");
 const chokidar = require("chokidar");
 
+const plugins = [
+  require.resolve("@babel/plugin-proposal-export-default-from"),
+  require.resolve("@babel/plugin-proposal-export-namespace-from"),
+  // require.resolve("babel-plugin-transform-export-extensions"),
+];
 const nodeBabelConfig = {
+  plugins,
   presets: [
     [
       require.resolve("@babel/preset-env"),
@@ -16,11 +22,12 @@ const nodeBabelConfig = {
           node: 6
         }
       }
-    ],
+    ]
     // [require.resolve("@babel/preset-stage-3"), { decoratorsLegacy: true }]
   ]
 };
 const browserBabelConfig = {
+  plugins,
   presets: [
     [
       require.resolve("@babel/preset-env"),
@@ -28,7 +35,7 @@ const browserBabelConfig = {
         browsers: ["last 2 versions", "IE 10"]
       }
     ],
-    require.resolve("@babel/preset-react"),
+    require.resolve("@babel/preset-react")
     // [require.resolve("@babel/preset-stage-3"), { decoratorsLegacy: true }]
   ]
 };
