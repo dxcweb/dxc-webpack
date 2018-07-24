@@ -1,10 +1,14 @@
 {
   "name": "dxc-webpack",
   "version": "1.0.0",
+  "bin": {
+    "dxc-webpack": "./bin/dxc-webpack.js"
+  },
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node ./scripts/build.js --watch"
+    "start": "node ./scripts/build.js --watch",
+    "build": "node ./scripts/build.js"
   },
   "repository": {
     "type": "git",
