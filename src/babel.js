@@ -33,8 +33,8 @@ export default function(opts = {}) {
      * export * as ns from 'mod';
      * export v from 'mod';
      */
-    require.resolve("@babel/plugin-proposal-export-namespace"),
-    require.resolve("@babel/plugin-proposal-export-default"),
+    // require.resolve("@babel/plugin-proposal-export-namespace"),
+    // require.resolve("@babel/plugin-proposal-export-default"),
     require.resolve("@babel/plugin-proposal-export-namespace-from"),
     require.resolve("@babel/plugin-proposal-export-default-from"),
 
