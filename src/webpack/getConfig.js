@@ -52,6 +52,7 @@ export default function getConfig(opts = {}) {
         localIdentName: "[local]___[hash:base64:5]"
       };
   const lessOptions = {
+    javascriptEnabled: true,
     modifyVars: theme
   };
   const cssOptions = {

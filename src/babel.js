@@ -92,7 +92,9 @@ export default function(opts = {}) {
           ]
         }
       ],
-      require.resolve("@babel/preset-react")
+      require.resolve("@babel/preset-react"),
+      // require.resolve('babel-plugin-add-module-exports'),
+      // require.resolve('@babel/plugin-transform-modules-commonjs'),
     ],
     plugins
   };
